@@ -1,0 +1,13 @@
+[package]
+name = "symmetric-ratchet"
+version = "0.1.0"
+description = "A symmetric ratchet"
+license = "MIT"
+repository = "https://github.com/kayabaNerve/healthy-paranoia"
+authors = ["Luke Parker <lukeparker5132@gmail.com>"]
+keywords = []
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
