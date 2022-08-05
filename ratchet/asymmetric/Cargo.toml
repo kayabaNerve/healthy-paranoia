@@ -9,11 +9,5 @@ keywords = []
 edition = "2021"
 
 [dependencies]
-zeroize = { version = "1.3", optional = true }
-digest = { version = "0.10", optional = true }
 rand = { version = "0.8.5" }
 group = { version = "0.12.0" }
-
-[features]
-digest_ratchet = ["zeroize", "digest"]
-default = ["digest_ratchet"]
