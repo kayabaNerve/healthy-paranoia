@@ -3,11 +3,11 @@ use group::{ff::Field, prime::PrimeGroup};
 
 use crate::AsymmetricRatchet;
 
-pub struct DiffieHelman<G: PrimeGroup> {
+pub struct DiffieHellman<G: PrimeGroup> {
   key: G::Scalar,
 }
 
-impl<G: PrimeGroup> AsymmetricRatchet for DiffieHelman<G> {
+impl<G: PrimeGroup> AsymmetricRatchet for DiffieHellman<G> {
   type PublicKey = G;
   type Output = G::Repr;
 
