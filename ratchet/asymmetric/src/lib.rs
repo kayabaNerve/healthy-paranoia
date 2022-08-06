@@ -1,5 +1,10 @@
+#![cfg_attr(feature = "std", feature(macro_metavar_expr))]
+
 use zeroize::{Zeroize, ZeroizeOnDrop};
 use rand_core::{RngCore, CryptoRng};
+
+#[cfg(feature = "std")]
+mod robust;
 
 #[cfg(feature = "diffie_hellman")]
 pub mod diffie_hellman;
