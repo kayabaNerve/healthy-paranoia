@@ -1,38 +1,12 @@
-use std::io::Read;
-
-use zeroize::Zeroize;
-use rand_core::{RngCore, CryptoRng};
-
-use crate::AsymmetricRatchet;
-
-#[allow(unused)]
-fn vec_step<R: RngCore + CryptoRng, T: AsymmetricRatchet>(ratchet: &mut T, rng: &mut R) -> Vec<u8> {
-  ratchet.step(rng).as_ref().to_vec()
-}
-
-#[allow(unused)]
-fn vec_handshake<R: Read, T: AsymmetricRatchet>(
-  ratchet: &T,
-  cursor: &mut R,
-  res: &mut Vec<u8>,
-) -> Option<()> {
-  let mut buffer = T::PublicKey::default();
-  cursor.read_exact(buffer.as_mut()).ok()?;
-  let mut raw = ratchet.handshake(buffer)?;
-  res.extend(raw.as_ref());
-  raw.zeroize();
-  Some(())
-}
-
 #[macro_export]
 macro_rules! robust_ratchet {
-  ($vis: vis $name: ident, $($ratchet: ty),+) => {
-    $vis struct $name($($ratchet),*);
+  ($vis: vis $name: ident, $($Ratchet: ty),+) => {
+    $vis struct $name($($Ratchet),*);
 
-    impl Zeroize for $name {
+    impl zeroize::Zeroize for $name {
       fn zeroize(&mut self) {
         $(
-          let _: $ratchet;
+          let _: $Ratchet;
           self.${index()}.zeroize();
         )*
       }
@@ -40,32 +14,58 @@ macro_rules! robust_ratchet {
 
     impl Drop for $name {
       fn drop(&mut self) {
+        use zeroize::Zeroize;
         self.zeroize()
       }
     }
 
     impl zeroize::ZeroizeOnDrop for $name {}
 
-    impl AsymmetricRatchet for $name {
+    impl Default for $name {
+      fn default() -> $name {
+        $name(
+          $(<$Ratchet>::default()),*
+        )
+      }
+    }
+
+    impl asymmetric_ratchet::AsymmetricRatchet for $name {
       type PublicKey = Vec<u8>;
       type Output = Vec<u8>;
 
-      fn step<R: RngCore + CryptoRng>(&mut self, rng: &mut R) -> Self::PublicKey {
-        let mut res = vec![];
+      fn step<
+        R: rand_core::RngCore + rand_core::CryptoRng
+      >(&mut self, rng: &mut R) -> Self::PublicKey {
+        let mut res = Vec::<u8>::new();
         $(
-          let _: $ratchet;
-          res.extend(vec_step(&mut self.${index()}, rng));
+          let key: <
+            $Ratchet as asymmetric_ratchet::AsymmetricRatchet
+          >::PublicKey = self.${index()}.step(rng);
+          let key_ref: &[u8] = key.as_ref();
+          res.extend(key_ref);
         )*
         res
       }
 
       fn handshake(&self, key: Self::PublicKey) -> Option<Self::Output> {
+        use std::io::Read;
+        use zeroize::Zeroize;
+
         let mut cursor = std::io::Cursor::new(key);
-        let mut res = vec![];
-        $(
-          let _: $ratchet;
-          vec_handshake(&self.${index()}, &mut cursor, &mut res)?;
-        )*
+        let mut res = Vec::<u8>::new();
+
+        $({
+          let mut buffer = <
+            $Ratchet as asymmetric_ratchet::AsymmetricRatchet
+          >::PublicKey::default();
+          cursor.read_exact(buffer.as_mut()).ok()?;
+
+          let mut raw = self.${index()}.handshake(buffer)?;
+          let raw_ref: &[u8] = raw.as_ref();
+          res.extend(raw_ref);
+          raw.zeroize();
+        })*
+
         Some(res)
       }
     }
