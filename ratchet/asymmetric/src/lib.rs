@@ -1,8 +1,8 @@
 use zeroize::{Zeroize, ZeroizeOnDrop};
 use rand_core::{RngCore, CryptoRng};
 
-#[cfg(feature = "diffie_helman")]
-pub mod diffie_helman;
+#[cfg(feature = "diffie_hellman")]
+pub mod diffie_hellman;
 
 pub trait AsymmetricRatchet: Zeroize + ZeroizeOnDrop {
   type PublicKey: Default + AsRef<[u8]> + AsMut<[u8]>;
@@ -10,5 +10,5 @@ pub trait AsymmetricRatchet: Zeroize + ZeroizeOnDrop {
 
   fn step<R: RngCore + CryptoRng>(&mut self, rng: &mut R) -> Self::PublicKey;
 
-  fn handshake(&self, key: Self::PublicKey) -> Self::Output;
+  fn handshake(&self, key: Self::PublicKey) -> Option<Self::Output>;
 }
