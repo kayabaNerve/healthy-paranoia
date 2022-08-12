@@ -1,5 +1,7 @@
 [workspace]
 members = [
+  "allocator",
+
   "ratchet/symmetric",
   "ratchet/asymmetric",
   "ratchet/double",
